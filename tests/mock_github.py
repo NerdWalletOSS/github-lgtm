@@ -121,6 +121,11 @@ class MockRepository(object):
             raise UnknownObjectException(404, 'not found')
         return MockPullRequest.from_state(id=number)
 
+    def get_issue(self, number):
+        if number not in _pull_request_state:
+            raise UnknownObjectException(404, 'not found')
+        return MockIssue()
+
     def get_file_contents(self, path, ref=None):
         if path not in _repo_state['file_contents']:
             raise UnknownObjectException(404, 'not found')
@@ -183,3 +188,12 @@ class MockComment(object):
         self.created_at = dateutil_parser.parse(created_at)
         self.user = MockUser(login)
         self.body = body
+
+
+class MockIssue(object):
+
+    def __init__(self):
+        self.assignee = None
+
+    def edit(self, assignee):
+        self.assignee = assignee

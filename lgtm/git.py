@@ -3,8 +3,7 @@ import logging
 from dateutil import parser as dateutil_parser
 from github import Github as PyGithub
 from github import UnknownObjectException
-
-import owners
+import utils
 
 
 logger = logging.getLogger(__name__)
@@ -37,6 +36,19 @@ class GitHub(object):
         self.repo = self.org.get_repo(self.repo_name)
         self.current_user_login = self._git_api.get_user().name
 
+    def read_file_lines(self, file_path='OWNERS'):
+        """
+        Get a list of strings, one per line in the file
+        :param owners_file: A relative path to the file
+        :return: a list of line strings
+        """
+        self._connect()
+        try:
+            owner_file_contents = self.repo.get_file_contents(file_path)
+            return owner_file_contents.decoded_content.split('\n')
+        except UnknownObjectException:
+            return []
+
     def get_pull_request(self, pr_number):
         """
         :param pr_number: A GitHub pull request ID
@@ -60,7 +72,7 @@ class GitHub(object):
             return []
         return [m.login for m in teams[0].get_members()]
 
-    def expand_teams(self, logins_and_teams_list):
+    def expand_teams(self, logins_and_teams_list, except_login=None):
         """
         Given a list of GitHub user names and team names, return a set of user names with the team
         members expanded.
@@ -68,14 +80,16 @@ class GitHub(object):
         :return: list of GitHub user names
         """
         self._connect()
-        logins = set()
+        logins = list()
         for login_or_team in logins_and_teams_list:
+            if login_or_team == except_login:
+                continue
             if '/' in login_or_team:
                 for login in self.get_team_members(login_or_team):
-                    logins.add(login)
+                    logins.append(login)
             else:
-                logins.add(login_or_team)
-        return logins
+                logins.append(login_or_team)
+        return utils.ordered_set(logins)
 
 
 class PullRequest(object):
@@ -90,22 +104,9 @@ class PullRequest(object):
         self.pr_number = pr_number
         self._pr = git_hub.repo.get_pull(self.pr_number)
 
-    def get_reviewers(self, owners_file='OWNERS', owner_lines=None):
-        """
-        Get a list of GitHub user names for the owners of a pull request diff.
-        :param owners_file: A relative path to the OWNERS file in the repository.
-        :return: a list of GitHub user names
-        """
-        if not owner_lines:
-            try:
-                owner_file_contents = self._git_hub.repo.get_file_contents(owners_file)
-                owner_lines = owner_file_contents.decoded_content.split('\n')
-            except UnknownObjectException:
-                return []
-        owner_ids_and_globs = owners.parse(owner_lines)
-        file_paths = [f.filename for f in self._pr.get_files()]
-        reviewers = owners.get_owners_of_files(owner_ids_and_globs, file_paths)
-        return self._git_hub.expand_teams(reviewers)
+    @property
+    def files_changed(self):
+        return [f.filename for f in self._pr.get_files()]
 
     @property
     def comments(self):
@@ -136,7 +137,16 @@ class PullRequest(object):
         """
         return self._pr.user.login
 
-    def assign_to(self, logins):
+    def assign_to(self, login):
+        """
+        Assign a PR to a specific user.
+
+        :param login: A list of GitHub user name
+        """
+        issue = self._git_hub.repo.get_issue(self.pr_number)
+        issue.edit(assignee=login)
+
+    def notify(self, logins):
         """
         Notify a list of GitHub user names that they should review this pull request. Only notifies
         the users once.
@@ -149,6 +159,8 @@ class PullRequest(object):
         """
         # see: https://github.com/blog/2178-multiple-assignees-on-issues-and-pull-requests
         # see: https://github.com/PyGithub/PyGithub/issues/404
+        if not logins:
+            return False
         for _, author, comment in self.comments:
             if author != self._git_hub.current_user_login:
                 continue
@@ -178,7 +190,7 @@ class PullRequest(object):
         :param required_reviewers: A list of GitHub user names
         :return: A list of GitHub user names
         """
-        lgtm_logins = set()
+        lgtm_logins = list()
         last_commit_date = self.last_commit_date
         for date, author, comment in self.comments:
             # don't let the author lgtm their own PR
@@ -191,5 +203,5 @@ class PullRequest(object):
             for lgtm_token in LGTM_ALIASES:
                 # TODO: regex
                 if lgtm_token in comment:
-                    lgtm_logins.add(author)
-        return lgtm_logins
+                    lgtm_logins.append(author)
+        return utils.ordered_set(lgtm_logins)

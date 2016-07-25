@@ -77,11 +77,16 @@ if pull_request_ready_to_merge(github_token='MY_TOKEN', org='OrgName', repo='rep
 ```python
 from lgtm import GitHub
 
-github_repo = GitHub(github_token='MY_TOKEN', org='OrgName', repo='repo-name')
-pull_request = github_repo.get_pull_request(pr_number=1)
-reviewers = pull_request.get_reviewers(owners_file='OWNERS')
-# reviewers.append(pull_request.get_reviewers(owners_lines=['foo *.js', ]))  # append more
-pull_request.assign_to(reviewers)
+github_repo = git.GitHub(github_token=github_token, org_name=org, repo_name=repo)
+pull_request = github_repo.get_pull_request(pr_number=pr_number)
+owner_lines = github_repo.read_file_lines(file_path=owners_file)
+owner_ids_and_globs = owners.parse(owner_lines)
+reviewers = owners.get_owners_of_files(owner_ids_and_globs, pull_request.files_changed)
+reviewers = github_repo.expand_teams(reviewers, except_login=pull_request.author)
+# reviewers.append(pull_request.get_reviewers(owners_lines=['foo *.js', ]))
+if reviewers:
+    pull_request.assign_to(reviewers[0])
+    pull_request.notify(reviewers)
 
 if pull_request.ready_to_merge(reviewers):
     pass
@@ -102,3 +107,4 @@ comment or new commit pushed to a PR.
 - If there is no `OWNERS` file, `pull_request_ready_to_merge` will return True.
 - If there is an `OWNERS` file, but no reviewers for the set of files on the PR, `pull_request_ready_to_merge` will return True.
 - If you are the single owner in a repo, there is no need to lgtm your own PRs.
+- The first reviewer by `OWNER` file order will be assigned on the PR.

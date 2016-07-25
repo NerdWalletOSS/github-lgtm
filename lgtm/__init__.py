@@ -1,4 +1,5 @@
 import git
+import owners
 
 
 def pull_request_ready_to_merge(github_token, org, repo, pr_number, owners_file='OWNERS'):
@@ -14,9 +15,14 @@ def pull_request_ready_to_merge(github_token, org, repo, pr_number, owners_file=
     """
     github_repo = git.GitHub(github_token=github_token, org_name=org, repo_name=repo)
     pull_request = github_repo.get_pull_request(pr_number=pr_number)
-    reviewers = pull_request.get_reviewers(owners_file=owners_file)
+    owner_lines = github_repo.read_file_lines(file_path=owners_file)
+    owner_ids_and_globs = owners.parse(owner_lines)
+    reviewers = owners.get_owners_of_files(owner_ids_and_globs, pull_request.files_changed)
+    reviewers = github_repo.expand_teams(reviewers, except_login=pull_request.author)
     # reviewers.append(pull_request.get_reviewers(owners_lines=['foo *.js', ]))
-    pull_request.assign_to(reviewers)
+    if reviewers:
+        pull_request.assign_to(reviewers[0])
+        pull_request.notify(reviewers)
     return pull_request.ready_to_merge(reviewers)
 
 

@@ -25,6 +25,25 @@ class GetOwnersTests(unittest.TestCase):
             owners.get_owners_of_files([('foo', '*/bar/*')], files=['bat/bar/baz.js']),
             ['foo'])
 
+    def test_get_owners_of_files_glob_all(self):
+        self.assertEquals(
+            owners.get_owners_of_files([('foo', '*')], files=['bat/bar/baz.js']),
+            ['foo'])
+
+    def get_owners_of_files_order(self):
+        self.assertEquals(
+            owners.get_owners_of_files([
+                ('foo', '*'),
+                ('bar', '*'),
+                ('bat', '*'),
+                ('foo', '*.js'),
+            ], files=['bat/bar/baz.js']),
+            [
+                'foo',
+                'bar',
+                'bat',
+            ])
+
 
 class OwnersParseTests(unittest.TestCase):
 
