@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 # prefix to the notification comment, also used to identify the comment during future runs
-REVIEW_COMMENT_PREFIX = 'Please Review'
+REVIEW_COMMENT_PREFIX = 'This pull request requires a code review.'
 # a list of patterns to match against comments that indicate a successful code review
 LGTM_ALIASES = [
     'lgtm',
@@ -115,8 +115,7 @@ class PullRequest(object):
         :return: a list of (user name, comment text) tuples
         """
         comments = self._pr.get_issue_comments()
-        # TODO: this should be a namedtuple or object
-        return [(c.created_at, c.user.login, c.body) for c in comments]
+        return comments
 
     @property
     def last_commit_date(self):
@@ -146,29 +145,50 @@ class PullRequest(object):
         issue = self._git_hub.repo.get_issue(self.pr_number)
         issue.edit(assignee=login)
 
-    def notify(self, logins):
+    def _get_existing_comment(self):
+        for comment in self.comments:
+            author = comment.user.login
+            if author != self._git_hub.current_user_login:
+                continue
+            if comment.body.startswith(REVIEW_COMMENT_PREFIX):
+                return comment
+        return None
+
+    def _make_mention_string(self, logins):
+        return ' '.join(['@%s' % login for login in logins])
+
+    def create_or_update_comment(self, reviewers, required, prefix=None):
         """
         Notify a list of GitHub user names that they should review this pull request. Only notifies
         the users once.
 
-        Note: it would be nice to use GitHub assignees for this eventually. However, there is a
-        cap of 10 users on assignees. Also, PyGitHub does not support multiple assignees, yet.
-
-        :param logins: A list of GitHub user names
-        :return: A boolean that represents whether the notification had to be sent.
+        :param reviewers: A list of GitHub user names that should review the PR
+        :param required: A list of GitHub user names that are required to review the PR
+        :param prefix: A prefix to append to any automated comments
         """
         # see: https://github.com/blog/2178-multiple-assignees-on-issues-and-pull-requests
         # see: https://github.com/PyGithub/PyGithub/issues/404
-        if not logins:
-            return False
-        for _, author, comment in self.comments:
-            if author != self._git_hub.current_user_login:
-                continue
-            if comment.startswith(REVIEW_COMMENT_PREFIX):
-                return False
-        tags = ['@%s' % login for login in logins]
-        self._pr.create_issue_comment('%s: %s' % (REVIEW_COMMENT_PREFIX, ' '.join(tags)))
-        return True
+        prefix = prefix or REVIEW_COMMENT_PREFIX
+        if not reviewers and not required:
+            return
+        message = '%s\n\n' % prefix
+
+        if required:
+            message += 'All of the following reviewers must sign off: '
+            message += self._make_mention_string(required)
+            message += '\n\n'
+            message += 'Optional: %s' % self._make_mention_string(reviewers)
+        else:
+            message += 'One of the following reviewers must sign off: '
+            message += self._make_mention_string(reviewers)
+        message = message.strip()
+        existing_comment = self._get_existing_comment()
+        if existing_comment:
+            if existing_comment.body == message:
+                return
+            existing_comment.edit(message)
+        else:
+            self._pr.create_issue_comment(message)
 
     def one_has_signed_off(self, reviewers):
         if not reviewers:
@@ -199,16 +219,17 @@ class PullRequest(object):
         except_login = except_login or self.author
         lgtm_logins = list()
         last_commit_date = self.last_commit_date
-        for date, author, comment in self.comments:
+        for comment in self.comments:
+            author = comment.user.login
             # do not let the author sign off on their own PR
             if author == except_login:
                 continue
             # ignore any lgtm comments prior to the most recent commit (need to lgtm again)
-            if last_commit_date and date < last_commit_date:
+            if last_commit_date and comment.created_at < last_commit_date:
                 continue
-            comment = comment.lower()
+            comment_body = comment.body.lower()
             for lgtm_token in LGTM_ALIASES:
                 # TODO: regex
-                if lgtm_token in comment:
+                if lgtm_token in comment_body:
                     lgtm_logins.append(author)
         return utils.ordered_set(lgtm_logins)

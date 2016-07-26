@@ -19,7 +19,7 @@ lgtm --github-token=MY_TOKEN --github-pr-link=https://github.com/OrgName/repo-na
 3. Lock down the GitHub repo to prevent merging without successful checks.
 4. Reviewers will be automatically notified when they need to sign off on a pull request.
 
-![mention](https://dl.dropboxusercontent.com/spa/sffu0th1cc1sg9q/dio1i76e.png)
+![mention](https://dl.dropboxusercontent.com/spa/sffu0th1cc1sg9q/mo8dberl.png)
 
 5. Reviewers leave a "lgtm" comment on the pull request to sign off on a change.
 
