@@ -4,9 +4,37 @@ github-lgtm is a pull request approval system using GitHub
 [protected branches](https://help.github.com/articles/about-protected-branches/)
 and [OWNERS](https://www.chromium.org/developers/owners-files) files.
 
-## OWNERS files
 
-Start by creating an `OWNERS` files in the root of your repository. Example:
+## Quickstart
+
+```bash
+pip install github-lgtm
+lgtm --github-token=MY_TOKEN --github-pr-link=https://github.com/OrgName/repo-name/pull/1
+```
+
+## How it Works
+
+1. Create an `OWNERS` file as defined in the "Configuration" section
+2. Create a GitHub webhook that runs the `lgtm` check on pull requests.
+3. Lock down the GitHub repo to prevent merging without successful checks.
+4. Pull requests we only be eligible to be merged if one of the approved users leaves a
+   comment with the text "lgtm" (look good to me) in it.
+
+Behavior:
+
+- If there is no `OWNERS` file, all pull requests may be merged immediately.
+- If there is an `OWNERS` file, but no reviewers for the set of files on the PR,
+  the  pull request may be merged immediately.
+- If you are the single owner in a repo, there is no need to sign off on your own PRs.
+- Any commit will invalidate any existing sign offs; they must be made again.
+
+
+## Configuration
+
+Configuring who is notified when a PR is opened, and who has has to sign off on what files, is
+controlled entirely through the text file `OWNERS` in the root of your repository.
+
+Example:
 
 ```bash
 @github-user
@@ -15,16 +43,71 @@ Start by creating an `OWNERS` files in the root of your repository. Example:
 @github-user3 */subdir/*
 ```
 
-In this example, `@github-user` owns any file that changes in this repo. Anyone in the team
-`@OrgName/team-name` also owns any file. `@github-user2 ` owns any javascript file, in any
-directory. `@github-user3` owns any file under any directory named `subdir`, anywhere except in
-the root of the repo.
+In this example, `@github-user` owns any file that changes in this repo. They will be notified, and
+are eligible to single-handedly sign off on a pull request unless there are files changes that
+someone else specifically owns. Anyone in the team `@OrgName/team-name` will be notified of any
+file changing. `@github-user2` owns any javascript file. `@github-user3` owns any file under
+any directory named `subdir`, anywhere except in the root of the repo. *Effectively,
+`@github-user2` AND `@github-user3` must BOTH sign off any a PR that contains both a Javascript
+change and a change to the `subdir` directory.*
+
+**ALL reviewers watching specific files changed in a pull request must sign off before it is merged.**
 
 You can specify the same user in multiple lines if you want to match more than one glob.
 
 *Note:* The file matching uses [glob](https://en.wikipedia.org/wiki/Glob_(programming))
 style matching provided by the
 [fnmatch](https://docs.python.org/2/library/fnmatch.html#fnmatch.fnmatch) module in python.
+
+
+## Reviewers and Required Reviewers
+
+When a pull request is opened, `lgtm` will get the list of files that have been changed. It will
+run through the users and teams in your `OWNERS` file, and build two lists; a list of reviewers
+and a list of required reviewers.
+
+- Reviewers are users or teams who will be notified that a change is taking place.
+- Required Reviewers are users or teams who must ALL sign off on a change before it can be merged.
+
+**Note: if there are only reviewers on a pull request, any single one of them may sign off.**
+
+The line `@github-user` in your `OWNERS` file means that this user is a reviewer of the repo. The
+line `@github-user *` means that they are specifically watching every file. Effectively, they must
+sign off on any change.
+
+Pull request authors are themselves exempt from being a reviewer on their own pull requests.
+
+
+## Notification
+
+All reviewers and required reviewers will be notified when a pull request is opened by being tagged
+with and PR comment, created by the user associated with the `GITHUB_TOKEN`. Only one comment
+will be created, the first time the lgtm tool is run.
+
+*Note: you can easily see which pull requests you have been mentioned on by going to
+[https://github.com/pulls](https://github.com/pulls)*
+
+
+## Assignment
+
+Every pull request will assigned to the first matching reviewer from the `OWNERS` file. Order
+matters!
+
+
+## GitHub Teams
+
+You can use teams in your `OWNERS` file with the format `@OrgName/team-name`. If a team is a
+reviewer, all individual team members will be notified. This is because the GitHub UI does not
+allow you to easily filter down to pull requests that mention a team you are on.
+
+If a team is a required reviewer, any single member of the team can sign off on the pull request
+for the entire team.
+
+
+## Integration
+
+The idea is that you use a continuous integration server to run the `lgtm` tool on every PR, PR
+comment or new commit pushed to a PR.
 
 
 ## Usage from CLI:
@@ -65,6 +148,8 @@ optional arguments:
 
 ## Usage from Python:
 
+You can integrate into an existing Python check with just a couple of lines of code.
+
 ```python
 from lgtm import pull_request_ready_to_merge
 
@@ -72,10 +157,14 @@ if pull_request_ready_to_merge(github_token='MY_TOKEN', org='OrgName', repo='rep
     pass
 ```
 
+
 ### Advanced usage:
 
+For more control over the list of reviewers, who is required, whether anyone is assigned to a PR,
+etc, you can use this snippet from the definition of `pull_request_ready_to_merge`:
+
 ```python
-from lgtm import GitHub
+from lgtm import git, owners
 
 github_repo = git.GitHub(github_token=github_token, org_name=org, repo_name=repo)
 pull_request = github_repo.get_pull_request(pr_number=pr_number)
@@ -92,23 +181,3 @@ if required and pull_request.all_have_signed_off(required):
 else if pull_request.one_has_signed_off(individual_reviewers):
     pass
 ```
-
-
-## Notification
-
-Any owner on a PR will be notified by being tagged on a PR comment, created by the user associated
-with the `GITHUB_TOKEN`. Only one comment will be created, the first time the lgtm tool is run.
-
-
-## Workflow
-
-The idea is that you use a continuous integration server to run the lgtm tool on every PR, PR
-comment or new commit pushed to a PR.
-
-- If there is no `OWNERS` file, `pull_request_ready_to_merge` will return True.
-- If there is an `OWNERS` file, but no reviewers for the set of files on the PR,
-  `pull_request_ready_to_merge` will return True.
-- If you are the single owner in a repo, there is no need to lgtm your own PRs.
-- The first reviewer by `OWNER` file order will be assigned on the PR.
-- If there are specific teams or individuals who match the PR files list with a specific glob, those
-  reviewers are *required*. All individuals and at least one team member must sign off individually.
