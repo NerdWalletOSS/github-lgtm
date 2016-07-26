@@ -157,7 +157,23 @@ class PullRequest(object):
     def _make_mention_string(self, logins):
         return ' '.join(['@%s' % login for login in logins])
 
-    def create_or_update_comment(self, reviewers, required, prefix=None):
+    def generate_comment(self, reviewers, required, prefix=None):
+        if not reviewers and not required:
+            return None
+        prefix = prefix or REVIEW_COMMENT_PREFIX
+        message = '%s\n\n' % prefix
+        if required:
+            message += 'All of the following reviewers must sign off: '
+            message += self._make_mention_string(required)
+            message += '\n\n'
+            message += 'Optional: %s' % self._make_mention_string(reviewers)
+        else:
+            message += 'One of the following reviewers must sign off: '
+            message += self._make_mention_string(reviewers)
+        message = message.strip()
+        return message
+
+    def create_or_update_comment(self, message):
         """
         Notify a list of GitHub user names that they should review this pull request. Only notifies
         the users once.
@@ -168,20 +184,8 @@ class PullRequest(object):
         """
         # see: https://github.com/blog/2178-multiple-assignees-on-issues-and-pull-requests
         # see: https://github.com/PyGithub/PyGithub/issues/404
-        prefix = prefix or REVIEW_COMMENT_PREFIX
-        if not reviewers and not required:
+        if not message:
             return
-        message = '%s\n\n' % prefix
-
-        if required:
-            message += 'All of the following reviewers must sign off: '
-            message += self._make_mention_string(required)
-            message += '\n\n'
-            message += 'Optional: %s' % self._make_mention_string(reviewers)
-        else:
-            message += 'One of the following reviewers must sign off: '
-            message += self._make_mention_string(reviewers)
-        message = message.strip()
         existing_comment = self._get_existing_comment()
         if existing_comment:
             if existing_comment.body == message:

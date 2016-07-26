@@ -188,7 +188,8 @@ individual_reviewers = github_repo.expand_teams(reviewers, except_login=pull_req
 # individual_reviewers.append(pull_request.get_reviewers(owners_lines=['foo *.js', ]))
 if individual_reviewers:
     pull_request.assign_to(individual_reviewers[0])
-    pull_request.notify(individual_reviewers)
+    comment = pull_request.generate_comment(reviewers=individual_reviewers, required=required)
+    pull_request.create_or_update_comment(comment)
 if required and pull_request.all_have_signed_off(required):
     pass
 else if pull_request.one_has_signed_off(individual_reviewers):

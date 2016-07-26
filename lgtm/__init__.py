@@ -22,7 +22,8 @@ def pull_request_ready_to_merge(github_token, org, repo, pr_number, owners_file=
     # individual_reviewers.append(pull_request.get_reviewers(owners_lines=['foo *.js', ]))
     if individual_reviewers:
         pull_request.assign_to(individual_reviewers[0])
-        pull_request.create_or_update_comment(reviewers=individual_reviewers, required=required)
+        comment = pull_request.generate_comment(reviewers=individual_reviewers, required=required)
+        pull_request.create_or_update_comment(comment)
     if required:
         return pull_request.all_have_signed_off(required)
     return pull_request.one_has_signed_off(individual_reviewers)
