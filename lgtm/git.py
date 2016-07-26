@@ -105,7 +105,7 @@ class PullRequest(object):
         self._pr = git_hub.repo.get_pull(self.pr_number)
 
     @property
-    def files_changed(self):
+    def files(self):
         return [f.filename for f in self._pr.get_files()]
 
     @property
@@ -170,31 +170,38 @@ class PullRequest(object):
         self._pr.create_issue_comment('%s: %s' % (REVIEW_COMMENT_PREFIX, ' '.join(tags)))
         return True
 
-    def ready_to_merge(self, required_reviewers):
-        """
-        Determines whether a pull request has been code reviewed and is ready to be merged.
-        :param required_reviewers: A list of GitHub user names
-        :return: Boolean that represents whether a pull request can be merged
-        """
-        if not required_reviewers:
+    def one_has_signed_off(self, reviewers):
+        if not reviewers:
             return True
-        if self.signed_off_by(required_reviewers):
-            return True
-        if required_reviewers == {self.author}:
-            return True
+        sign_offs = self.signed_off_by()
+        for reviewer in reviewers:
+            assert '/' not in reviewer, 'Teams of reviewers should be expanded already'
+            if reviewer in sign_offs:
+                return True
         return False
 
-    def signed_off_by(self, required_reviewers):
+    def all_have_signed_off(self, required_reviewers):
+        if not required_reviewers:
+            return True
+        sign_offs = self.signed_off_by()
+        sign_offs = self._git_hub.expand_teams(sign_offs, except_login=self.author)
+        for required_reviewer in required_reviewers:
+            if required_reviewer not in sign_offs:
+                return False
+        return True
+
+    def signed_off_by(self, except_login=None):
         """
         Get the list of GitHub user names who have signed off on the pull request.
-        :param required_reviewers: A list of GitHub user names
+        :param except_login: A GitHub user name who should not be allowed to sign off
         :return: A list of GitHub user names
         """
+        except_login = except_login or self.author
         lgtm_logins = list()
         last_commit_date = self.last_commit_date
         for date, author, comment in self.comments:
-            # don't let the author lgtm their own PR
-            if author not in required_reviewers:
+            # do not let the author sign off on their own PR
+            if author == except_login:
                 continue
             # ignore any lgtm comments prior to the most recent commit (need to lgtm again)
             if last_commit_date and date < last_commit_date:

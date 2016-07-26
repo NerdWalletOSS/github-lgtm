@@ -6,43 +6,41 @@ from lgtm import owners
 class GetOwnersTests(unittest.TestCase):
 
     def test_get_owners_of_files(self):
-        self.assertEquals(
-            owners.get_owners_of_files([('foo', None)], files=['bar', 'bat']),
-            ['foo'])
+        reviewers, required = owners.get_owners_of_files([('foo', None)], files=['bar', 'bat'])
+        self.assertEquals(reviewers, ['foo'])
+        self.assertEquals(required, [])
 
     def test_get_owners_of_files_empty(self):
-        self.assertEquals(
-            owners.get_owners_of_files([], files=['bar', 'bat']),
-            [])
+        reviewers, required = owners.get_owners_of_files([], files=['bar', 'bat'])
+        self.assertEquals(reviewers, [])
+        self.assertEquals(required, [])
 
     def test_get_owners_of_files_glob(self):
-        self.assertEquals(
-            owners.get_owners_of_files([('foo', '*.js')], files=['bar/bat.js']),
-            ['foo'])
+        reviewers, required = owners.get_owners_of_files([('foo', '*.js')], files=['bar', 'bat.js'])
+        self.assertEquals(reviewers, ['foo'])
+        self.assertEquals(required, ['foo'])
 
     def test_get_owners_of_files_glob_subdir(self):
-        self.assertEquals(
-            owners.get_owners_of_files([('foo', '*/bar/*')], files=['bat/bar/baz.js']),
-            ['foo'])
+        reviewers, required = owners.get_owners_of_files(
+            [('foo', '*/bar/*')], files=['foo/bar/bat'])
+        self.assertEquals(reviewers, ['foo'])
+        self.assertEquals(required, ['foo'])
 
     def test_get_owners_of_files_glob_all(self):
-        self.assertEquals(
-            owners.get_owners_of_files([('foo', '*')], files=['bat/bar/baz.js']),
-            ['foo'])
+        reviewers, required = owners.get_owners_of_files([('foo', '*')], files=['bar', 'bat'])
+        self.assertEquals(reviewers, ['foo'])
+        self.assertEquals(required, ['foo'])
 
     def get_owners_of_files_order(self):
-        self.assertEquals(
-            owners.get_owners_of_files([
-                ('foo', '*'),
+        reviewers, required = owners.get_owners_of_files([
+                ('foo', None),
                 ('bar', '*'),
                 ('bat', '*'),
+                ('foo', '*'),
                 ('foo', '*.js'),
-            ], files=['bat/bar/baz.js']),
-            [
-                'foo',
-                'bar',
-                'bat',
-            ])
+            ], files=['bar', 'bat'])
+        self.assertEquals(reviewers, ['foo', 'bar', 'bat'])
+        self.assertEquals(required, ['foo'])
 
 
 class OwnersParseTests(unittest.TestCase):

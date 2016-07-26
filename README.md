@@ -81,14 +81,15 @@ github_repo = git.GitHub(github_token=github_token, org_name=org, repo_name=repo
 pull_request = github_repo.get_pull_request(pr_number=pr_number)
 owner_lines = github_repo.read_file_lines(file_path=owners_file)
 owner_ids_and_globs = owners.parse(owner_lines)
-reviewers = owners.get_owners_of_files(owner_ids_and_globs, pull_request.files_changed)
-reviewers = github_repo.expand_teams(reviewers, except_login=pull_request.author)
-# reviewers.append(pull_request.get_reviewers(owners_lines=['foo *.js', ]))
-if reviewers:
-    pull_request.assign_to(reviewers[0])
-    pull_request.notify(reviewers)
-
-if pull_request.ready_to_merge(reviewers):
+reviewers, required = owners.get_owners_of_files(owner_ids_and_globs, pull_request.files)
+individual_reviewers = github_repo.expand_teams(reviewers, except_login=pull_request.author)
+# individual_reviewers.append(pull_request.get_reviewers(owners_lines=['foo *.js', ]))
+if individual_reviewers:
+    pull_request.assign_to(individual_reviewers[0])
+    pull_request.notify(individual_reviewers)
+if required and pull_request.all_have_signed_off(required):
+    pass
+else if pull_request.one_has_signed_off(individual_reviewers):
     pass
 ```
 
@@ -105,6 +106,9 @@ The idea is that you use a continuous integration server to run the lgtm tool on
 comment or new commit pushed to a PR.
 
 - If there is no `OWNERS` file, `pull_request_ready_to_merge` will return True.
-- If there is an `OWNERS` file, but no reviewers for the set of files on the PR, `pull_request_ready_to_merge` will return True.
+- If there is an `OWNERS` file, but no reviewers for the set of files on the PR,
+  `pull_request_ready_to_merge` will return True.
 - If you are the single owner in a repo, there is no need to lgtm your own PRs.
 - The first reviewer by `OWNER` file order will be assigned on the PR.
+- If there are specific teams or individuals who match the PR files list with a specific glob, those
+  reviewers are *required*. All individuals and at least one team member must sign off individually.
