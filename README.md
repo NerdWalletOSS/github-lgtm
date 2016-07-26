@@ -17,8 +17,18 @@ lgtm --github-token=MY_TOKEN --github-pr-link=https://github.com/OrgName/repo-na
 1. Create an `OWNERS` file as defined in the "Configuration" section
 2. Create a GitHub webhook that runs the `lgtm` check on pull requests.
 3. Lock down the GitHub repo to prevent merging without successful checks.
-4. Pull requests we only be eligible to be merged if one of the approved users leaves a
-   comment with the text "lgtm" (look good to me) in it.
+4. Reviewers will be automatically notified when they need to sign off on a pull request.
+
+![mention](https://dl.dropboxusercontent.com/spa/sffu0th1cc1sg9q/dio1i76e.png)
+
+5. Reviewers leave a "lgtm" comment on the pull request to sign off on a change.
+
+![lgtm](https://dl.dropboxusercontent.com/spa/sffu0th1cc1sg9q/cwa6vv73.png)
+
+6. Once the required set of reviewers has signed off, the pull request be eligible to be merged.
+
+![checks](https://help.github.com/assets/images/help/repository/req-status-check-all-passed.png)
+
 
 Behavior:
 
@@ -102,6 +112,9 @@ allow you to easily filter down to pull requests that mention a team you are on.
 
 If a team is a required reviewer, any single member of the team can sign off on the pull request
 for the entire team.
+
+If the pull request author is on a reviewing team, they are not allowed to sign off. Someone else
+on the team will need to sign off.
 
 
 ## Integration
