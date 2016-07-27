@@ -7,7 +7,7 @@ install_requires = [
 
 setup(
     name='lgtm',
-    version='0.0.3',
+    version='0.0.4',
     packages=['lgtm'],
     install_requires=install_requires,
     include_package_data=True,

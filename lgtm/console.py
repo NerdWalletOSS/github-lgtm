@@ -53,6 +53,14 @@ def get_options_parser(args=None, do_exit=True):
     return options
 
 
+def log_debug_info(options):
+    logger.debug('github_token == %r' % options.github_token)
+    logger.debug('github_org == %r' % options.github_org)
+    logger.debug('github_repo == %r' % options.github_repo)
+    logger.debug('github_pr_number == %r' % options.github_pr_number)
+    logger.debug('owners_file == %r' % options.owners_file)
+
+
 def main(args=None, do_exit=True):
     """
     The main body of the lgtm command line tool
@@ -65,6 +73,7 @@ def main(args=None, do_exit=True):
     if options.version:
         logger.info(pkg_resources.require('lgtm')[0].version)
         return 0
+    log_debug_info(options)
     ready_to_merge = pull_request_ready_to_merge(
         github_token=options.github_token,
         org=options.github_org,
