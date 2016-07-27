@@ -1,13 +1,13 @@
 from setuptools import setup
 
 install_requires = [
-    'python-dateutil==2.5.3',
-    'PyGithub==1.26.0',
+    'python-dateutil>=2.4.2,<3.0.0',
+    'PyGithub>=1.26.0,<2.0.0',
 ]
 
 setup(
     name='lgtm',
-    version='0.0.1',
+    version='0.0.3',
     packages=['lgtm'],
     install_requires=install_requires,
     include_package_data=True,
