@@ -9,7 +9,7 @@ import os
 import sys
 import pkg_resources
 
-import integrations
+from lgtm import integrations
 from lgtm import pull_request_ready_to_merge
 
 
