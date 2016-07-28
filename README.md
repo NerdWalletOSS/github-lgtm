@@ -8,8 +8,8 @@ and [OWNERS](https://www.chromium.org/developers/owners-files) files.
 ## Quickstart
 
 ```bash
-pip install github-lgtm
-lgtm --github-token=MY_TOKEN --github-pr-link=https://github.com/OrgName/repo-name/pull/1
+pip install lgtm
+lgtm --github-token=MY_TOKEN --github-org=OrgName --github-repo=repo-name --github-pr-number=1
 ```
 
 ## How it Works
@@ -143,8 +143,7 @@ python:
 env:
   secure: ""
 install: "pip install lgtm"
-script:
-    - lgtm --integration travis
+script: lgtm --integration travis
 ```
 
 The `secure` option is used to pass your GitHub API token. You can generate the value by doing
@@ -162,27 +161,23 @@ re-trigger the build**
 ## Usage from CLI:
 
 ```bash
-lgtm --github-token=MY_TOKEN --github-pr-link=https://github.com/OrgName/repo-name/pull/1
+lgtm --help
 ```
 
 ### Help:
 
 ```bash
-usage: lgtm  [-h] [--github-token GITHUB_TOKEN]
-                  [--github-pr-link GITHUB_PR_LINK] [--github-org GITHUB_ORG]
+usage: console.py [-h] [--github-token GITHUB_TOKEN] [--github-org GITHUB_ORG]
                   [--github-repo GITHUB_REPO]
                   [--github-pr-number GITHUB_PR_NUMBER]
-                  [--owners-file OWNERS_FILE] [--version] [--verbose]
+                  [--owners-file OWNERS_FILE] [--integration {jenkins,travis}]
+                  [--version] [--verbose]
 
 optional arguments:
   -h, --help            show this help message and exit
   --github-token GITHUB_TOKEN
                         GitHub API Token, can also use GITHUB_TOKEN
                         environment variable
-  --github-pr-link GITHUB_PR_LINK
-                        GitHub PR URL, can also use ghprbPullLink environment
-                        variable. You can also specify individual settings for
-                        org name, repo name and PR number.
   --github-org GITHUB_ORG
                         GitHub organization name
   --github-repo GITHUB_REPO
@@ -191,6 +186,9 @@ optional arguments:
                         Pull request number
   --owners-file OWNERS_FILE
                         Relative path to OWNERS file
+  --integration {jenkins,travis}
+                        Extract org/repo/pr from environment variables
+                        specific to a platform
   --version             Print version and exit
   --verbose             Print commands that are running and other debug info
 ```
