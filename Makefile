@@ -7,7 +7,11 @@ lint:
 	@. venv/bin/activate; frosted -vb --skip venv --recursive .
 	@. venv/bin/activate; pep8 --max-line-length=100 --exclude venv .
 run:
-	@. venv/bin/activate; python -m lgtm.console --github-pr-link $(PR_URL)
+	@. venv/bin/activate; python -m lgtm.console --integration jenkins --verbose
+help:
+	@. venv/bin/activate; python -m lgtm.console --help
+version:
+	@. venv/bin/activate; python -m lgtm.console --version
 dist:
 	@python setup.py sdist
 install: venv/bin/activate

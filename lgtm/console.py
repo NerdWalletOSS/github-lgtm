@@ -9,6 +9,7 @@ import os
 import sys
 import pkg_resources
 
+import integrations
 from lgtm import pull_request_ready_to_merge
 
 
@@ -25,40 +26,37 @@ def get_options_parser(args=None, do_exit=True):
         '--github-token',
         help='GitHub API Token, can also use GITHUB_TOKEN environment variable',
         default=os.environ.get('GITHUB_TOKEN'))
-    parser.add_argument(
-        '--github-pr-link',
-        help='GitHub PR URL, can also use ghprbPullLink environment variable. You can also '
-             'specify individual settings for org name, repo name and PR number.',
-        default=os.environ.get('ghprbPullLink'))
     parser.add_argument('--github-org', help='GitHub organization name')
     parser.add_argument('--github-repo', help='Pull request repository name')
     parser.add_argument('--github-pr-number', help='Pull request number')
     parser.add_argument('--owners-file', help='Relative path to OWNERS file', default='OWNERS')
+    parser.add_argument(
+        '--integration',
+        help='Extract org/repo/pr from environment variables specific to a platform',
+        choices=['jenkins', ],
+        default=None)
     parser.add_argument('--version', help='Print version and exit', action='store_true')
     parser.add_argument(
         '--verbose',
         help='Print commands that are running and other debug info',
         action='store_true')
     options = parser.parse_args(args)
-    if options.github_pr_link:
-        # ex: https://github.com/OrgName/repo-name/pull/1
-        parts = options.github_pr_link.split('/')
-        options.github_org = parts[3]
-        options.github_repo = parts[4]
-        options.github_pr_number = int(parts[6])
-    if not options.github_org or not options.github_repo or not options.github_pr_number:
+    logging.basicConfig(format='%(message)s')
+    logger.setLevel(logging.DEBUG if options.verbose else logging.INFO)
+    if options.integration:
+        defaults = integrations.get_options_defaults_dict(options.integration)
+        for option, value in defaults.items():
+            setattr(options, option, value)
+        logger.debug('Options: %r' % options)
+    if options.version:
+        return options
+    required = ['github_token', 'github_org', 'github_repo', 'github_pr_number']
+    if not all([getattr(options, option) for option in required]):
         parser.print_usage()
         if do_exit:
             exit()
+    options.github_pr_number = int(options.github_pr_number)
     return options
-
-
-def log_debug_info(options):
-    logger.debug('github_token == %r' % options.github_token)
-    logger.debug('github_org == %r' % options.github_org)
-    logger.debug('github_repo == %r' % options.github_repo)
-    logger.debug('github_pr_number == %r' % options.github_pr_number)
-    logger.debug('owners_file == %r' % options.owners_file)
 
 
 def main(args=None, do_exit=True):
@@ -67,13 +65,9 @@ def main(args=None, do_exit=True):
     :return: Zero if the PR is ready to merge, one if it's not
     """
     options = get_options_parser(args, do_exit=do_exit)
-    logging.basicConfig(
-        format='%(message)s',
-        level=logging.DEBUG if options.verbose else logging.INFO)
     if options.version:
         logger.info(pkg_resources.require('lgtm')[0].version)
         return 0
-    log_debug_info(options)
     ready_to_merge = pull_request_ready_to_merge(
         github_token=options.github_token,
         org=options.github_org,

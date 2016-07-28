@@ -9,8 +9,12 @@ class ConsoleTests(MockPyGithubTests):
         options = console.get_options_parser([
             '--github-token',
             'foo',
-            '--github-pr-link',
-            'https://github.com/OrgName/repo-name/pull/1'
+            '--github-org',
+            'OrgName',
+            '--github-repo',
+            'repo-name',
+            '--github-pr-number',
+            '1',
         ], do_exit=False)
         self.assertEquals(options.github_token, 'foo')
         self.assertEquals(options.github_org, 'OrgName')
@@ -22,8 +26,12 @@ class ConsoleTests(MockPyGithubTests):
         console.main([
             '--github-token',
             'foo',
-            '--github-pr-link',
-            'https://github.com/OrgName/repo-name/pull/1'
+            '--github-org',
+            'OrgName',
+            '--github-repo',
+            'repo-name',
+            '--github-pr-number',
+            '1',
         ], do_exit=False)
 
     def test_main_not_ready(self):
@@ -34,8 +42,12 @@ class ConsoleTests(MockPyGithubTests):
         console.main([
             '--github-token',
             'foo',
-            '--github-pr-link',
-            'https://github.com/OrgName/repo-name/pull/1'
+            '--github-org',
+            'OrgName',
+            '--github-repo',
+            'repo-name',
+            '--github-pr-number',
+            '1',
         ], do_exit=False)
 
     def test_main_version(self):
