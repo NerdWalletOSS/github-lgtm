@@ -1,5 +1,6 @@
 import git
 import owners
+import integrations
 
 
 def pull_request_ready_to_merge(github_token, org, repo, pr_number, owners_file='OWNERS'):
@@ -32,4 +33,5 @@ def pull_request_ready_to_merge(github_token, org, repo, pr_number, owners_file=
 __all__ = [
     'pull_request_ready_to_merge',
     'GitHub',
+    'integrations',
 ]

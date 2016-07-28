@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 install_requires = [
     'python-dateutil>=2.4.2,<3.0.0',
@@ -7,8 +7,8 @@ install_requires = [
 
 setup(
     name='lgtm',
-    version='0.0.6',
-    packages=['lgtm'],
+    version='0.0.9',
+    packages=find_packages(exclude=['tests', 'lgtm/tests']),
     install_requires=install_requires,
     include_package_data=True,
     author='Chase Seibert',

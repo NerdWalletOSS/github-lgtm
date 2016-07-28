@@ -7,13 +7,18 @@ lint:
 	@. venv/bin/activate; frosted -vb --skip venv --recursive .
 	@. venv/bin/activate; pep8 --max-line-length=100 --exclude venv .
 run:
-	@. venv/bin/activate; python -m lgtm.console --integration jenkins --verbose
+	@. venv/bin/activate; python -m lgtm.console --integration travis --verbose
 help:
 	@. venv/bin/activate; python -m lgtm.console --help
 version:
 	@. venv/bin/activate; python -m lgtm.console --version
 dist:
 	@python setup.py sdist
+clean:
+	@ find . -name "*.pyc" -exec rm -rf {} \;
+	@rm -rf lgtm.egg-info
+	@rm -rf dist
+	@rm -rf venv
 install: venv/bin/activate
 venv/bin/activate: requirements.txt
 	@test -d venv || virtualenv venv

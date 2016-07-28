@@ -143,7 +143,10 @@ class PullRequest(object):
         :param login: A list of GitHub user name
         """
         issue = self._git_hub.repo.get_issue(self.pr_number)
-        issue.edit(assignee=login)
+        try:
+            issue.edit(assignee=login)
+        except UnknownObjectException:
+            logger.warn('Cannot assign issue to %r, issue not found' % login)
 
     def _get_existing_comment(self):
         for comment in self.comments:

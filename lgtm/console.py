@@ -33,7 +33,7 @@ def get_options_parser(args=None, do_exit=True):
     parser.add_argument(
         '--integration',
         help='Extract org/repo/pr from environment variables specific to a platform',
-        choices=['jenkins', ],
+        choices=['jenkins', 'travis'],
         default=None)
     parser.add_argument('--version', help='Print version and exit', action='store_true')
     parser.add_argument(
