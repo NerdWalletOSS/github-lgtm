@@ -123,6 +123,42 @@ The idea is that you use a continuous integration server to run the `lgtm` tool 
 comment or new commit pushed to a PR.
 
 
+### Jenkins
+
+- Install the [GitHub pull request builder plugin](https://wiki.jenkins-ci.org/display/JENKINS/GitHub+pull+request+builder+plugin)
+- Configure the pull request builder as per their instructions
+- Install the tool on the Jenkins server with `sudo pip install lgtm`
+- Add `GITHUB_TOKEN=foobar lgtm --integration jenkins` to your list of build steps.
+- Under `Build Triggers` -> `GitHub Pull Request Builder` -> `Advanced`, set the `Trigger phrase` to `lgtm`.
+
+
+### Travis
+
+Example `.travis.yml`:
+
+```bash
+language: python
+python:
+  - "2.7"
+env:
+  secure: ""
+install: "pip install lgtm"
+script:
+    - lgtm --integration travis
+```
+
+The `secure` option is used to pass your GitHub API token. You can generate the value by doing
+the following:
+
+```bash
+gem install travis
+travis encrypt GITHUB_TOKEN=foobar
+```
+
+That's it! **Note: Travis cannot be trigger to rebuild on new comments. You must manually
+re-trigger the build**
+
+
 ## Usage from CLI:
 
 ```bash
