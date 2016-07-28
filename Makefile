@@ -14,6 +14,8 @@ version:
 	@. venv/bin/activate; python -m lgtm.console --version
 dist:
 	@python setup.py sdist
+upload:
+	@python setup.py sdist upload
 clean:
 	@ find . -name "*.pyc" -exec rm -rf {} \;
 	@rm -rf lgtm.egg-info
