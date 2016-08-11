@@ -22,24 +22,29 @@ def get_options_parser(args=None, do_exit=True):
     :return: the options object
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--github-token',
-        help='GitHub API Token, can also use GITHUB_TOKEN environment variable',
-        default=os.environ.get('GITHUB_TOKEN'))
+    parser.add_argument('--github-token',
+                        help='GitHub API Token, can also use GITHUB_TOKEN environment variable',
+                        default=os.environ.get('GITHUB_TOKEN'))
     parser.add_argument('--github-org', help='GitHub organization name')
     parser.add_argument('--github-repo', help='Pull request repository name')
     parser.add_argument('--github-pr-number', help='Pull request number')
     parser.add_argument('--owners-file', help='Relative path to OWNERS file', default='OWNERS')
-    parser.add_argument(
-        '--integration',
-        help='Extract org/repo/pr from environment variables specific to a platform',
-        choices=['jenkins', 'travis'],
-        default=None)
+    parser.add_argument('--skip-approval',
+                        action='append',
+                        dest='skip_approval_branches',
+                        help='No requirement to approve merges into this branch')
+    parser.add_argument('--skip-notification',
+                        action='append',
+                        dest='skip_notification_branches',
+                        help='Do not send notifications for PRs to this branch')
+    parser.add_argument('--integration',
+                        help='Extract org/repo/pr from environment variables specific to a platform',
+                        choices=['jenkins', 'travis'],
+                        default=None)
     parser.add_argument('--version', help='Print version and exit', action='store_true')
-    parser.add_argument(
-        '--verbose',
-        help='Print commands that are running and other debug info',
-        action='store_true')
+    parser.add_argument('--verbose',
+                        help='Print commands that are running and other debug info',
+                        action='store_true')
     options = parser.parse_args(args)
     logging.basicConfig(format='%(message)s')
     logger.setLevel(logging.DEBUG if options.verbose else logging.INFO)
