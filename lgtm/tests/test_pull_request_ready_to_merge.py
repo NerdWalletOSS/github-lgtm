@@ -43,10 +43,12 @@ class PullRequestReadyToMergeTests(MockPyGithubTests):
         mock_github.create_fake_pull_request(author='bar', comments=[])
         self.assertTrue(pull_request_ready_to_merge(pr_number=1))
 
-    def test_fails_when_not_ready(self):
+    @mock.patch('lgtm.git.PullRequest.assign_to')
+    def test_fails_when_not_ready(self, assigned_to_someone):
         mock_github.create_fake_repo(file_contents={'OWNERS': '@bar'})
         mock_github.create_fake_pull_request(author='blah', comments=[])
         self.assertFalse(pull_request_ready_to_merge(pr_number=1))
+        self.assertTrue(assigned_to_someone.called)
 
     def test_passes_when_approval_not_required(self):
         mock_github.create_fake_repo(file_contents={'OWNERS': '@bar'})
@@ -76,3 +78,10 @@ class PullRequestReadyToMergeTests(MockPyGithubTests):
         mock_github.create_fake_pull_request(author='blah', comments=[])
         pull_request_ready_to_merge(pr_number=1, options={'skip_notification_branches': ['master']})
         self.assertFalse(comment_generated.called)
+
+    @mock.patch('lgtm.git.PullRequest.assign_to')
+    def test_skip_assignment(self, assigned_to_someone):
+        mock_github.create_fake_repo(file_contents={'OWNERS': '@bar'})
+        mock_github.create_fake_pull_request(author='blah', comments=[])
+        pull_request_ready_to_merge(pr_number=1, options={'skip_assignment': True})
+        self.assertFalse(assigned_to_someone.called)

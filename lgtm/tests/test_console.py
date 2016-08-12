@@ -21,6 +21,7 @@ class ConsoleTests(MockPyGithubTests):
             'develop',
             '--skip-notification',
             'master',
+            '--skip-assignment',
         ], do_exit=False)
         self.assertEquals(options.github_token, 'foo')
         self.assertEquals(options.github_org, 'OrgName')
@@ -28,6 +29,7 @@ class ConsoleTests(MockPyGithubTests):
         self.assertEquals(options.github_pr_number, 1)
         self.assertItemsEqual(options.skip_notification_branches, ['master'])
         self.assertItemsEqual(options.skip_approval_branches, ['master', 'develop'])
+        self.assertTrue(options.skip_assignment)
 
     def test_main_ready(self):
         mock_github.create_fake_pull_request(id=1)

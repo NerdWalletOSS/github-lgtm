@@ -33,6 +33,9 @@ def get_options_parser(args=None, do_exit=True):
                         action='append',
                         dest='skip_approval_branches',
                         help='No requirement to approve merges into this branch')
+    parser.add_argument('--skip-assignment',
+                        action='store_true',
+                        help='Do not assign the PR to anyone on the review list')
     parser.add_argument('--skip-notification',
                         action='append',
                         dest='skip_notification_branches',

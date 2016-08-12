@@ -23,7 +23,8 @@ def pull_request_ready_to_merge(github_token, org, repo, pr_number, owners_file=
     individual_reviewers = github_repo.expand_teams(reviewers, except_login=pull_request.author)
     # individual_reviewers.append(pull_request.get_reviewers(owners_lines=['foo *.js', ]))
     if individual_reviewers:
-        pull_request.assign_to(individual_reviewers[0])
+        if not options.get('skip_assignment'):
+            pull_request.assign_to(individual_reviewers[0])
 
         if pull_request.base_branch not in options.get('skip_notification_branches', []):
             comment = pull_request.generate_comment(reviewers=individual_reviewers, required=required)
