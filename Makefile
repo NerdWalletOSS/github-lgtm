@@ -5,7 +5,7 @@ coverage:
 	@. venv/bin/activate; nosetests --with-coverage --cover-package=lgtm
 lint:
 	@. venv/bin/activate; frosted -vb --skip venv --recursive .
-	@. venv/bin/activate; pep8 --max-line-length=100 --exclude venv .
+	@. venv/bin/activate; pep8 --max-line-length=120 --exclude venv .
 run:
 	@. venv/bin/activate; python -m lgtm.console --integration travis --verbose
 help:
