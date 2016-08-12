@@ -171,6 +171,8 @@ usage: console.py [-h] [--github-token GITHUB_TOKEN] [--github-org GITHUB_ORG]
                   [--github-repo GITHUB_REPO]
                   [--github-pr-number GITHUB_PR_NUMBER]
                   [--owners-file OWNERS_FILE] [--integration {jenkins,travis}]
+                  [--skip-approval <branch_name>] [--skip-assignment]
+                  [--skip-notification <branch_name>]
                   [--version] [--verbose]
 
 optional arguments:
@@ -189,6 +191,12 @@ optional arguments:
   --integration {jenkins,travis}
                         Extract org/repo/pr from environment variables
                         specific to a platform
+  --skip-approval       Add a branch to the list of branches for which
+                        approval is not necessary.
+  --skip-assignment     Do not assign the PR to anyone on the reviewers
+                        list.
+  --skip-notification   Add a branch to the list of branches for which
+                        notification should not be sent.
   --version             Print version and exit
   --verbose             Print commands that are running and other debug info
 ```
