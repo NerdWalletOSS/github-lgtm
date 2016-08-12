@@ -15,6 +15,7 @@ REVIEW_COMMENT_PREFIX = 'This pull request requires a code review.'
 LGTM_ALIASES = [
     'lgtm',
     ':shipit:',
+    ':+1:'
 ]
 
 

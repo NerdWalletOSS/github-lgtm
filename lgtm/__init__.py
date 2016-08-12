@@ -15,9 +15,7 @@ def pull_request_ready_to_merge(github_token, org, repo, pr_number, owners_file=
     :param options: Dict of options to be used
     :return: A boolean that represents whether the pull request can be merged.
     """
-    if not options:
-        options = {}
-
+    options = options or {}
     github_repo = git.GitHub(github_token=github_token, org_name=org, repo_name=repo)
     pull_request = github_repo.get_pull_request(pr_number=pr_number)
     owner_lines = github_repo.read_file_lines(file_path=owners_file)
