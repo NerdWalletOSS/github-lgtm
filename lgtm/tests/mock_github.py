@@ -1,5 +1,6 @@
 from dateutil import parser as dateutil_parser
 from github import UnknownObjectException
+from github.PullRequestPart import PullRequestPart
 
 
 _org_state = {
@@ -147,6 +148,7 @@ class MockPullRequest(object):
         self._last_commit_date = dateutil_parser.parse(last_commit_date)
         self._file_paths = file_paths
         self._comments = comments
+        self.base = PullRequestPart(None, None, {"ref": "master"}, False)
 
     @classmethod
     def from_state(cls, id):

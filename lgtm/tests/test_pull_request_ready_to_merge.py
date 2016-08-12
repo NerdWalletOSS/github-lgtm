@@ -40,3 +40,23 @@ class PullRequestReadyToMergeTests(MockPyGithubTests):
         mock_github.create_fake_repo(file_contents={'OWNERS': 'bar'})
         mock_github.create_fake_pull_request(author='bar', comments=[])
         self.assertTrue(pull_request_ready_to_merge(pr_number=1))
+
+    def test_fails_when_not_ready(self):
+        mock_github.create_fake_repo(file_contents={'OWNERS': '@bar'})
+        mock_github.create_fake_pull_request(author='blah', comments=[])
+        self.assertFalse(pull_request_ready_to_merge(pr_number=1))
+
+    def test_passes_when_approval_not_required(self):
+        mock_github.create_fake_repo(file_contents={'OWNERS': '@bar'})
+        mock_github.create_fake_pull_request(author='blah', comments=[])
+        self.assertTrue(pull_request_ready_to_merge(pr_number=1, options={'skip_approval_branches': ['master']}))
+
+    def test_fails_when_branch_approval_not_required(self):
+        mock_github.create_fake_repo(file_contents={'OWNERS': '@bar'})
+        mock_github.create_fake_pull_request(author='blah', comments=[])
+        self.assertFalse(pull_request_ready_to_merge(pr_number=1, options={'skip_approval_branches': ['develop']}))
+
+    def test_fails_when_branch_does_not_match_skip_list(self):
+        mock_github.create_fake_repo(file_contents={'OWNERS': '@bar'})
+        mock_github.create_fake_pull_request(author='blah', comments=[])
+        self.assertFalse(pull_request_ready_to_merge(pr_number=1, options={'skip_approval_branches': ['develop']}))

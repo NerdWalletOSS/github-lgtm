@@ -105,6 +105,10 @@ class PullRequest(object):
         self._pr = git_hub.repo.get_pull(self.pr_number)
 
     @property
+    def base_branch(self):
+        return self._pr.base.ref
+
+    @property
     def files(self):
         return [f.filename for f in self._pr.get_files()]
 
