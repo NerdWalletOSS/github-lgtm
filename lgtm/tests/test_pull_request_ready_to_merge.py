@@ -1,3 +1,5 @@
+import mock
+
 from functools import partial
 
 from github import UnknownObjectException
@@ -60,3 +62,17 @@ class PullRequestReadyToMergeTests(MockPyGithubTests):
         mock_github.create_fake_repo(file_contents={'OWNERS': '@bar'})
         mock_github.create_fake_pull_request(author='blah', comments=[])
         self.assertFalse(pull_request_ready_to_merge(pr_number=1, options={'skip_approval_branches': ['develop']}))
+
+    @mock.patch('lgtm.git.PullRequest.generate_comment')
+    def test_send_notification_when_branch_does_not_match(self, comment_generated):
+        mock_github.create_fake_repo(file_contents={'OWNERS': '@bar'})
+        mock_github.create_fake_pull_request(author='blah', comments=[])
+        pull_request_ready_to_merge(pr_number=1, options={'skip_notification_branches': ['develop']})
+        self.assertTrue(comment_generated.called)
+
+    @mock.patch('lgtm.git.PullRequest.generate_comment')
+    def test_skip_notification_when_branch_matches(self, comment_generated):
+        mock_github.create_fake_repo(file_contents={'OWNERS': '@bar'})
+        mock_github.create_fake_pull_request(author='blah', comments=[])
+        pull_request_ready_to_merge(pr_number=1, options={'skip_notification_branches': ['master']})
+        self.assertFalse(comment_generated.called)
