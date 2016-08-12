@@ -28,7 +28,8 @@ def parse_git_branch(git_branch):
 
 
 def get_pull_request_dict(env=None):
-    env = env or os.environ
+    if env is None:
+        env = os.environ
     pull_request_dict = {}
     for env_var_name, parser in (
         ('ghprbPullLink', parse_pull_link),
