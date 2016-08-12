@@ -3,7 +3,7 @@ import owners
 import integrations
 
 
-def pull_request_ready_to_merge(github_token, org, repo, pr_number, owners_file='OWNERS', options={}):
+def pull_request_ready_to_merge(github_token, org, repo, pr_number, owners_file='OWNERS', options=None):
     """
     Using the GitHub API, check whether a pull request is ready to be merged. Adds a comment to the
     pull request that tags anyone who owns a file in the diff.
@@ -15,6 +15,9 @@ def pull_request_ready_to_merge(github_token, org, repo, pr_number, owners_file=
     :param options: Dict of options to be used
     :return: A boolean that represents whether the pull request can be merged.
     """
+    if not options:
+        options = {}
+
     github_repo = git.GitHub(github_token=github_token, org_name=org, repo_name=repo)
     pull_request = github_repo.get_pull_request(pr_number=pr_number)
     owner_lines = github_repo.read_file_lines(file_path=owners_file)

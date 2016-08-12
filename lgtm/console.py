@@ -31,6 +31,7 @@ def get_options_parser(args=None, do_exit=True):
     parser.add_argument('--owners-file', help='Relative path to OWNERS file', default='OWNERS')
     parser.add_argument('--skip-approval',
                         action='append',
+                        default=[],
                         dest='skip_approval_branches',
                         help='No requirement to approve merges into this branch')
     parser.add_argument('--skip-assignment',
@@ -38,6 +39,7 @@ def get_options_parser(args=None, do_exit=True):
                         help='Do not assign the PR to anyone on the review list')
     parser.add_argument('--skip-notification',
                         action='append',
+                        default=[],
                         dest='skip_notification_branches',
                         help='Do not send notifications for PRs to this branch')
     parser.add_argument('--integration',
@@ -82,6 +84,10 @@ def main(args=None, do_exit=True):
         repo=options.github_repo,
         pr_number=options.github_pr_number,
         owners_file=options.owners_file,
+        options={'skip_approval_branches': options.skip_approval_branches,
+                 'skip_assignment': options.skip_assignment,
+                 'skip_notification_branches': options.skip_notification_branches,
+                 }
     )
     if ready_to_merge:
         logger.info('Pull request is ready to merge.')
