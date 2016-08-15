@@ -1,4 +1,5 @@
 import logging
+import re
 
 from dateutil import parser as dateutil_parser
 from github import Github as PyGithub
@@ -13,10 +14,11 @@ logger = logging.getLogger(__name__)
 REVIEW_COMMENT_PREFIX = 'This pull request requires a code review.'
 # a list of patterns to match against comments that indicate a successful code review
 LGTM_ALIASES = [
-    'lgtm',
-    ':shipit:',
-    ':+1:'
+    r'(?i)\blgtm\b',
+    r':shipit:',
+    r':\+1:'
 ]
+LGTM_ALIAS_RE = re.compile(r'|'.join(LGTM_ALIASES))
 
 
 class GitHub(object):
@@ -239,9 +241,6 @@ class PullRequest(object):
             # ignore any lgtm comments prior to the most recent commit (need to lgtm again)
             if last_commit_date and comment.created_at < last_commit_date:
                 continue
-            comment_body = comment.body.lower()
-            for lgtm_token in LGTM_ALIASES:
-                # TODO: regex
-                if lgtm_token in comment_body:
-                    lgtm_logins.append(author)
+            if LGTM_ALIAS_RE.search(comment.body):
+                lgtm_logins.append(author)
         return utils.ordered_set(lgtm_logins)
