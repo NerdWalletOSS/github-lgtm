@@ -131,8 +131,10 @@ class PullRequest(object):
         :return: a datetime object
         """
         commits = self._pr.get_commits()
-        commit_date_strings = [c.last_modified for c in commits]
-        commit_dates = [dateutil_parser.parse(d).replace(tzinfo=None) for d in commit_date_strings]
+        commit_dates = []
+        for c in commits:
+            c.commit.raw_headers  # force PyGithub to give an accurate last_modified date
+            commit_dates.append(c.commit.last_modified)
         return max(commit_dates) if commit_dates else None
 
     @property
