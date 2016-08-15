@@ -1,4 +1,3 @@
-import os
 import re
 
 
@@ -27,9 +26,7 @@ def parse_git_branch(git_branch):
     return _match(r'[^/]+/pr/(?P<github_pr_number>\d+)', git_branch)
 
 
-def get_pull_request_dict(env=None):
-    if env is None:
-        env = os.environ
+def get_pull_request_dict(env):
     pull_request_dict = {}
     for env_var_name, parser in (
         ('ghprbPullLink', parse_pull_link),

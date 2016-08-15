@@ -7,7 +7,7 @@ lint:
 	@. venv/bin/activate; frosted -vb --skip venv --recursive .
 	@. venv/bin/activate; pep8 --max-line-length=120 --exclude venv .
 run:
-	@. venv/bin/activate; python -m lgtm.console --integration travis --verbose
+	@. venv/bin/activate; python -m lgtm.console --integration jenkins --verbose
 help:
 	@. venv/bin/activate; python -m lgtm.console --help
 version:
