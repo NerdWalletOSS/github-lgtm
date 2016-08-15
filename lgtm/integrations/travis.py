@@ -1,4 +1,3 @@
-import os
 import re
 
 
@@ -19,8 +18,7 @@ def parse_pull_request(value):
     return {'github_pr_number': int(value)}
 
 
-def get_pull_request_dict(env=None):
-    env = env or os.environ
+def get_pull_request_dict(env):
     pull_request_dict = {}
     for env_var_name, parser in (
         ('TRAVIS_REPO_SLUG', parse_repo_slug),
