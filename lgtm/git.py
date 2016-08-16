@@ -1,7 +1,6 @@
 import logging
 import re
 
-from dateutil import parser as dateutil_parser
 from github import Github as PyGithub
 from github import UnknownObjectException
 import utils
