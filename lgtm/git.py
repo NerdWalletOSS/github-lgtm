@@ -1,6 +1,7 @@
 import logging
 import re
 
+from dateutil import parser as dateutil_parser
 from github import Github as PyGithub
 from github import UnknownObjectException
 import utils
@@ -133,7 +134,7 @@ class PullRequest(object):
         commit_dates = []
         for c in commits:
             c.commit.raw_headers  # force PyGithub to give an accurate last_modified date
-            commit_dates.append(c.commit.last_modified)
+            commit_dates.append(dateutil_parser.parse(c.commit.last_modified).replace(tzinfo=None))
         return max(commit_dates) if commit_dates else None
 
     @property

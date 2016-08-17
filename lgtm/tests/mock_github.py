@@ -182,7 +182,7 @@ class MockCommit(object):
 class MockGithubCommit(object):
 
     def __init__(self, last_modified):
-        self.last_modified = dateutil_parser.parse(last_modified)
+        self.last_modified = last_modified
         self.raw_headers = ''
 
 
