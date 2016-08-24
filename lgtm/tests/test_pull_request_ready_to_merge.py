@@ -16,7 +16,8 @@ class PullRequestReadyToMergeTests(MockPyGithubTests):
 
     def test_ready(self):
         mock_github.create_fake_pull_request(id=1)
-        self.assertTrue(pull_request_ready_to_merge(pr_number=1))
+        # baz still needs to sign off
+        self.assertFalse(pull_request_ready_to_merge(pr_number=1))
 
     def test_404(self):
         mock_github.create_fake_pull_request(id=1)

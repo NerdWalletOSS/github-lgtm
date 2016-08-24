@@ -53,7 +53,7 @@ def create_fake_pull_request(**kwargs):
         last_commit_date='2016-01-01 00:00:01',
         file_paths=[
             'file1',
-            'file2.js'
+            'file2.js',
             'build/foo.txt',
         ],
         comments=[
@@ -61,7 +61,7 @@ def create_fake_pull_request(**kwargs):
             ('2016-01-01 00:00:02', 'bat', 'lgtm'),  # from the author
             ('2016-01-01 00:00:03', 'boo', 'lgtm'),  # not from an owner
             ('2016-01-01 00:00:04', 'baz', 'some comment'),  # not an lgtm comment
-            ('2016-01-01 00:00:05', 'foo', 'lgtm'),  # this one is a successful lgtm
+            ('2016-01-01 00:00:05', 'foo', 'lgtm'),  # baz is still required for build/foo.txt
         ],
     )
     defaults.update(kwargs)
