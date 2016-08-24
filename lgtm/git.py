@@ -167,18 +167,24 @@ class PullRequest(object):
         return None
 
     def _make_mention_string(self, logins):
-        return ' '.join(['@%s' % login for login in logins])
+        return ' '.join(['@%s' % login for login in sorted(logins)])
 
     def generate_comment(self, reviewers, required, prefix=None):
         if not reviewers and not required:
             return None
         prefix = prefix or REVIEW_COMMENT_PREFIX
         message = '%s\n\n' % prefix
+
+        reviewers = set(reviewers) - set([self.author])
+        required = set(required) - set([self.author])
+        left_overs = set(reviewers) - set(required)
+
         if required:
             message += 'All of the following reviewers must sign off: '
             message += self._make_mention_string(required)
-            message += '\n\n'
-            message += 'Optional: %s' % self._make_mention_string(reviewers)
+            if left_overs:
+                message += '\n\n'
+                message += 'Optional: %s' % self._make_mention_string(left_overs)
         else:
             message += 'One of the following reviewers must sign off: '
             message += self._make_mention_string(reviewers)
