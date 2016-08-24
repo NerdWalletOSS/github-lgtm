@@ -78,3 +78,17 @@ class MessageContentTestSuite(MockPyGithubTests):
         self.assertEqual(required, [])
         output = pr.generate_comment(reviewers, required, ' ')
         self.assertEqual(output, 'One of the following reviewers must sign off: @baz @blah')
+
+    def test_message_when_approval_skipped(self):
+        mock_github.create_fake_repo(file_contents={'OWNERS': '@bar\n@baz\n@blah'})
+        mock_github.create_fake_pull_request(author='bar', comments=[])
+        github_repo = git.GitHub('foo', 'bar_org', 'bat')
+        pr = github_repo.get_pull_request(1)
+        owner_lines = github_repo.read_file_lines(file_path='OWNERS')
+        owner_ids_and_globs = owners.parse(owner_lines)
+        reviewers, required = owners.get_owners_of_files(owner_ids_and_globs, pr.files)
+        individual_reviewers = github_repo.expand_teams(reviewers, except_login=pr.author)
+        self.assertItemsEqual(reviewers, ['bar', 'baz', 'blah'])
+        self.assertEqual(required, [])
+        output = pr.generate_comment(reviewers, required, ' ', False)
+        self.assertEqual(output, 'No approval necessary on this PR.\n/cc @baz @blah')
