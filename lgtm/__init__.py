@@ -2,6 +2,8 @@ import git
 import owners
 import integrations
 
+from utils import generate_comment
+
 
 def pull_request_ready_to_merge(github_token, org, repo, pr_number, owners_file='OWNERS', options=None):
     """
@@ -29,9 +31,10 @@ def pull_request_ready_to_merge(github_token, org, repo, pr_number, owners_file=
             pull_request.assign_to(individual_reviewers[0])
 
         if pull_request.base_branch not in options.get('skip_notification_branches', []):
-            comment = pull_request.generate_comment(reviewers=individual_reviewers,
-                                                    required=required,
-                                                    approval_required=approval_required)
+            comment = generate_comment(author=pull_request.author,
+                                       reviewers=individual_reviewers,
+                                       required=required,
+                                       approval_required=approval_required)
             pull_request.create_or_update_comment(comment)
 
     if not approval_required:
