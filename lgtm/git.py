@@ -6,12 +6,11 @@ from github import Github as PyGithub
 from github import UnknownObjectException
 import utils
 
+from utils import DEFAULT_REVIEW_COMMENT_PREFIX
+
 
 logger = logging.getLogger(__name__)
 
-
-# prefix to the notification comment, also used to identify the comment during future runs
-REVIEW_COMMENT_PREFIX = 'This pull request requires a code review.'
 # a list of patterns to match against comments that indicate a successful code review
 LGTM_ALIASES = [
     r'(?i)\blgtm\b',
@@ -162,28 +161,9 @@ class PullRequest(object):
             author = comment.user.login
             if author != self._git_hub.current_user_login:
                 continue
-            if comment.body.startswith(REVIEW_COMMENT_PREFIX):
+            if comment.body.startswith(DEFAULT_REVIEW_COMMENT_PREFIX):
                 return comment
         return None
-
-    def _make_mention_string(self, logins):
-        return ' '.join(['@%s' % login for login in logins])
-
-    def generate_comment(self, reviewers, required, prefix=None):
-        if not reviewers and not required:
-            return None
-        prefix = prefix or REVIEW_COMMENT_PREFIX
-        message = '%s\n\n' % prefix
-        if required:
-            message += 'All of the following reviewers must sign off: '
-            message += self._make_mention_string(required)
-            message += '\n\n'
-            message += 'Optional: %s' % self._make_mention_string(reviewers)
-        else:
-            message += 'One of the following reviewers must sign off: '
-            message += self._make_mention_string(reviewers)
-        message = message.strip()
-        return message
 
     def create_or_update_comment(self, message):
         """

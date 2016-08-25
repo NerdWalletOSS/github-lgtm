@@ -2,6 +2,8 @@ import git
 import owners
 import integrations
 
+from utils import generate_comment
+
 
 def pull_request_ready_to_merge(github_token, org, repo, pr_number, owners_file='OWNERS', options=None):
     """
@@ -22,16 +24,20 @@ def pull_request_ready_to_merge(github_token, org, repo, pr_number, owners_file=
     owner_ids_and_globs = owners.parse(owner_lines)
     reviewers, required = owners.get_owners_of_files(owner_ids_and_globs, pull_request.files)
     individual_reviewers = github_repo.expand_teams(reviewers, except_login=pull_request.author)
+    approval_required = pull_request.base_branch not in options.get('skip_approval_branches', [])
     # individual_reviewers.append(pull_request.get_reviewers(owners_lines=['foo *.js', ]))
     if individual_reviewers:
         if not options.get('skip_assignment'):
             pull_request.assign_to(individual_reviewers[0])
 
         if pull_request.base_branch not in options.get('skip_notification_branches', []):
-            comment = pull_request.generate_comment(reviewers=individual_reviewers, required=required)
+            comment = generate_comment(author=pull_request.author,
+                                       reviewers=individual_reviewers,
+                                       required=required,
+                                       approval_required=approval_required)
             pull_request.create_or_update_comment(comment)
 
-    if pull_request.base_branch in options.get('skip_approval_branches', []):
+    if not approval_required:
         return True
 
     if required:

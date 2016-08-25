@@ -16,7 +16,8 @@ class PullRequestReadyToMergeTests(MockPyGithubTests):
 
     def test_ready(self):
         mock_github.create_fake_pull_request(id=1)
-        self.assertTrue(pull_request_ready_to_merge(pr_number=1))
+        # baz still needs to sign off
+        self.assertFalse(pull_request_ready_to_merge(pr_number=1))
 
     def test_404(self):
         mock_github.create_fake_pull_request(id=1)
@@ -65,19 +66,19 @@ class PullRequestReadyToMergeTests(MockPyGithubTests):
         mock_github.create_fake_pull_request(author='blah', comments=[])
         self.assertFalse(pull_request_ready_to_merge(pr_number=1, options={'skip_approval_branches': ['develop']}))
 
-    @mock.patch('lgtm.git.PullRequest.generate_comment')
-    def test_send_notification_when_branch_does_not_match(self, comment_generated):
+    @mock.patch('lgtm.git.PullRequest.create_or_update_comment')
+    def test_send_notification_when_branch_does_not_match(self, comment_created):
         mock_github.create_fake_repo(file_contents={'OWNERS': '@bar'})
         mock_github.create_fake_pull_request(author='blah', comments=[])
         pull_request_ready_to_merge(pr_number=1, options={'skip_notification_branches': ['develop']})
-        self.assertTrue(comment_generated.called)
+        self.assertTrue(comment_created.called)
 
-    @mock.patch('lgtm.git.PullRequest.generate_comment')
-    def test_skip_notification_when_branch_matches(self, comment_generated):
+    @mock.patch('lgtm.git.PullRequest.create_or_update_comment')
+    def test_skip_notification_when_branch_matches(self, comment_created):
         mock_github.create_fake_repo(file_contents={'OWNERS': '@bar'})
         mock_github.create_fake_pull_request(author='blah', comments=[])
         pull_request_ready_to_merge(pr_number=1, options={'skip_notification_branches': ['master']})
-        self.assertFalse(comment_generated.called)
+        self.assertFalse(comment_created.called)
 
     @mock.patch('lgtm.git.PullRequest.assign_to')
     def test_skip_assignment(self, assigned_to_someone):

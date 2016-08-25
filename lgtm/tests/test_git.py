@@ -1,4 +1,5 @@
 import mock_github
+
 from base import MockPyGithubTests
 from lgtm import git
 
